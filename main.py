@@ -2,6 +2,7 @@
 A simple game of snake, with a few twists.
 """
 
+import asyncio
 import random
 import time
 
@@ -42,7 +43,7 @@ d = pygame.K_d
 q = pygame.K_q
 
 
-def make_apple() -> tuple[int, int] | None:
+def make_apple(head_x, head_y) -> tuple[int, int] | None:
     """
     Generates a new position for the apple. If none is found, return None.
     :return:
@@ -67,101 +68,106 @@ def change_direction(current_direction) -> str | None:
         current_direction
     )
 
+async def main():
+    while True:
 
-while True:
-    head_x, head_y = 32 * WIDTH / 2, 32 * HEIGHT / 2
-    if head_x % 32 != 0:
-        head_x -= head_x % 32
-    if head_y % 32 != 0:
-        head_y -= head_y % 32
+        head_x, head_y = 32 * WIDTH / 2, 32 * HEIGHT / 2
+        if head_x % 32 != 0:
+            head_x -= head_x % 32
+        if head_y % 32 != 0:
+            head_y -= head_y % 32
 
-    apple_x, apple_y = 0, 0
+        apple_x, apple_y = 0, 0
 
-    make_apple()
+        make_apple(head_x, head_y)
 
-    direction = "right"
+        direction = "right"
 
-    speed = 10 / INITIAL_SPEED
-    speed_cap = 0.1
-    speed_rate = 0.01 * SPEED_INCREASE_PER_APPLE
+        speed = 10 / INITIAL_SPEED
+        speed_cap = 0.1
+        speed_rate = 0.01 * SPEED_INCREASE_PER_APPLE
 
-    segments = 1
+        segments = 1
 
-    all_positions = [(0, 100000)]
+        all_positions = [(0, 100000)]
 
-    game_loop = True
-    while game_loop:
-        all_positions.append((head_x, head_y))
+        game_loop = True
+        while game_loop:
+            all_positions.append((head_x, head_y))
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                print("Game quit")
-                pygame.quit()
-                game_loop = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == q:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     print("Game quit")
                     pygame.quit()
                     game_loop = False
-                elif event.key == a and direction != "right":
-                    direction = "left"
-                elif event.key == d and direction != "left":
-                    direction = "right"
-                elif event.key == w and direction != "down":
-                    direction = "up"
-                elif event.key == s and direction != "up":
-                    direction = "down"
-
-        if direction == "up":
-            head_y -= 32
-        elif direction == "down":
-            head_y += 32
-        elif direction == "left":
-            head_x -= 32
-        elif direction == "right":
-            head_x += 32
-
-        if head_x > 32 * (WIDTH - 1):
-            head_x = 0
-        if head_x < 0:
-            head_x = 32 * (WIDTH - 1)
-        if head_y > 32 * (HEIGHT - 1):
-            head_y = 0
-        if head_y < 0:
-            head_y = 32 * (HEIGHT - 1)
-
-        if not game_loop:
-            break
-
-        print(speed)
-        if head_x == apple_x and head_y == apple_y:
-            apple_x, apple_y = make_apple()
-            speed -= speed_rate
-            segments += 1
-            speed = max(speed, speed_cap)
-
-        SCREEN.fill(BLACK)
-        SCREEN.blit(SNAKE_HEAD, (head_x, head_y))
-        SCREEN.blit(APPLE, (apple_x, apple_y))
-
-        if segments > 0:
-            for segment in range(segments):
-                segment_pos = all_positions[-1 * segment]
-                if segment_pos == (head_x, head_y):
-                    if segment == 2:
-                        if direction == "left":
-                            head_x += 32
-                        elif direction == "right":
-                            head_x -= 32
-                        elif direction == "up":
-                            head_y += 32
-                        elif direction == "down":
-                            head_y -= 32
-                        direction = change_direction(direction)
-                    else:
-                        print("You died!")
+                if event.type == pygame.KEYDOWN:
+                    if event.key == q:
+                        print("Game quit")
+                        pygame.quit()
                         game_loop = False
-                SCREEN.blit(SNAKE_BODY, segment_pos)
+                    elif event.key == a and direction != "right":
+                        direction = "left"
+                    elif event.key == d and direction != "left":
+                        direction = "right"
+                    elif event.key == w and direction != "down":
+                        direction = "up"
+                    elif event.key == s and direction != "up":
+                        direction = "down"
 
-        pygame.display.flip()
-        time.sleep(speed)
+            if direction == "up":
+                head_y -= 32
+            elif direction == "down":
+                head_y += 32
+            elif direction == "left":
+                head_x -= 32
+            elif direction == "right":
+                head_x += 32
+
+            if head_x > 32 * (WIDTH - 1):
+                head_x = 0
+            if head_x < 0:
+                head_x = 32 * (WIDTH - 1)
+            if head_y > 32 * (HEIGHT - 1):
+                head_y = 0
+            if head_y < 0:
+                head_y = 32 * (HEIGHT - 1)
+
+            if not game_loop:
+                break
+
+            print(speed)
+            if head_x == apple_x and head_y == apple_y:
+                apple_x, apple_y = make_apple(head_x, head_y)
+                speed -= speed_rate
+                segments += 1
+                speed = max(speed, speed_cap)
+
+            SCREEN.fill(BLACK)
+            SCREEN.blit(SNAKE_HEAD, (head_x, head_y))
+            SCREEN.blit(APPLE, (apple_x, apple_y))
+
+            if segments > 0:
+                for segment in range(segments):
+                    segment_pos = all_positions[-1 * segment]
+                    if segment_pos == (head_x, head_y):
+                        if segment == 2:
+                            if direction == "left":
+                                head_x += 32
+                            elif direction == "right":
+                                head_x -= 32
+                            elif direction == "up":
+                                head_y += 32
+                            elif direction == "down":
+                                head_y -= 32
+                            direction = change_direction(direction)
+                        else:
+                            print("You died!")
+                            game_loop = False
+                    SCREEN.blit(SNAKE_BODY, segment_pos)
+
+            pygame.display.flip()
+            time.sleep(speed)
+
+            await asyncio.sleep(0)
+        await asyncio.sleep(0)
+asyncio.run(main())
